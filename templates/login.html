@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+  <meta charset="utf-8">
+  <title>filemanager - login</title>
+  <link rel="stylesheet" href="static/bootswatch/paper/bootstrap.min.css">
+  <link href="static/angular-filemanager.css" rel="stylesheet">
+</head>
+
+<body>
+<div class="container">
+<div class="row">
+<div class="col-lg-3"></div>
+<div class="col-lg-6">
+<form method="post" action="/login" class="form-horizontal">
+ <fieldset>
+    <legend>Login</legend>
+    <div class="form-group">
+      <label for="inputUsername" class="col-lg-2 control-label">Username: </label>
+      <div class="col-lg-10">
+        <input type="text" class="form-control" name="username" id="inputUsername" placeholder="">
+      </div>
+    </div>
+ 	<div class="form-group">
+      <label for="inputPassword" class="col-lg-2 control-label">Password: </label>
+      <div class="col-lg-10">
+        <input type="password" class="form-control" name="password" id="inputPassword" placeholder="">
+      </div>
+    </div>
+ 	<div class="form-group">
+      <div class="col-lg-10 col-lg-offset-2">
+        <button type="submit" class="btn btn-primary">Login</button>
+		<p class="text-danger flasherrormsg">{{.Flash.ErrorMsg}}</p>
+		<p class="text-danger errormsg">{{.ErrorMsg}}</p>
+      </div>
+    </div>
+ </fieldset>
+</form>
+</div>
+<div class="col-lg-3"></div>
+</div>
+</div>
+</div>
+</body>
+
+</html>

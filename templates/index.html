@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" data-ng-app="FileManagerApp">
+
+<head>
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+  <meta charset="utf-8">
+  <title>filemanager</title>
+
+  <script src="static/angular/angular.min.js"></script>
+  <script src="static/angular-translate/angular-translate.min.js"></script>
+  <script src="static/angular-cookies/angular-cookies.min.js"></script>
+  <script src="static/jquery/dist/jquery.min.js"></script>
+  <script src="static/bootstrap/dist/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="static/bootswatch/paper/bootstrap.min.css">
+
+  <link href="static/angular-filemanager.css" rel="stylesheet">
+  <script src="static/angular-filemanager.min.js"></script>
+
+  <!-- https://github.com/joni2back/angular-filemanager/blob/1.4.0/src/js/providers/config.js -->
+  <script type="text/javascript">
+    angular.module('FileManagerApp').config(['fileManagerConfigProvider', function (config) {
+      var defaults = config.$get();
+      config.set({
+        appName: 'User: {{.UserInfo.User}}',
+        uploadUrl: "/backend/upload",
+        downloadFileUrl: "/backend/download",
+        allowedActions: angular.extend(defaults.allowedActions, {
+          edit: false,
+          compress: false,
+          compressChooseName: false,
+          extract: false,
+          download: false,
+          preview: false
+        }),
+		isEditableFilePattern: /\.(123456789X)$/i,
+		isImageFilePattern: /\.(123456789X)$/i,
+		isExtractableFilePattern: /\.(123456789X)$/i,
+        tplPath: "static/templates"
+      });
+    }]);
+  </script>
+</head>
+
+<body class="ng-cloak">
+  <angular-filemanager></angular-filemanager>
+</body>
+
+</html>
