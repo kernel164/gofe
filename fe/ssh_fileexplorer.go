@@ -82,7 +82,7 @@ func (fe *SSHFileExplorer) Chmod(path string, code string) error {
 }
 
 func (fe *SSHFileExplorer) Close() error {
-	return nil
+	return fe.client.Close()
 }
 
 // Execute cmd on the remote host and return stderr and stdout

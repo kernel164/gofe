@@ -4,7 +4,7 @@
 <head>
   <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
   <meta charset="utf-8">
-  <title>filemanager</title>
+  <title>gofe</title>
 
   <script src="static/angular/angular.min.js"></script>
   <script src="static/angular-translate/angular-translate.min.js"></script>
@@ -21,9 +21,9 @@
     angular.module('FileManagerApp').config(['fileManagerConfigProvider', function (config) {
       var defaults = config.$get();
       config.set({
-        appName: 'User: {{.UserInfo.User}}',
-        uploadUrl: "/backend/upload",
-        downloadFileUrl: "/backend/download",
+        appName: 'User: {{.User}}',
+        uploadUrl: "/api/upload",
+        downloadFileUrl: "/api/download",
         allowedActions: angular.extend(defaults.allowedActions, {
           edit: false,
           compress: false,
@@ -32,9 +32,9 @@
           download: false,
           preview: false
         }),
-		isEditableFilePattern: /\.(123456789X)$/i,
-		isImageFilePattern: /\.(123456789X)$/i,
-		isExtractableFilePattern: /\.(123456789X)$/i,
+        //isEditableFilePattern: /\.(123456789X)$/i,
+        //isImageFilePattern: /\.(123456789X)$/i,
+        //isExtractableFilePattern: /\.(123456789X)$/i,
         tplPath: "static/templates"
       });
     }]);

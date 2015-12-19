@@ -73,30 +73,30 @@ func defaultHandler(ctx *macaron.Context) {
 	ctx.JSON(200, DEFAULT_API_ERROR_RESPONSE)
 }
 
-func apiHandler(c *macaron.Context, json models.GenericReq) {
+func apiHandler(c *macaron.Context, json models.GenericReq, sessionInfo SessionInfo) {
 	if json.Params.Mode == "list" {
-		ls, err := c.Data["SessionInfo"].(SessionInfo).FileExplorer.ListDir(json.Params.Path)
+		ls, err := sessionInfo.FileExplorer.ListDir(json.Params.Path)
 		if err == nil {
 			c.JSON(200, models.ListDirResp{ls})
 		} else {
 			ApiErrorResponse(c, 400, err)
 		}
 	} else if json.Params.Mode == "rename" { // path, newPath
-		err := c.Data["SessionInfo"].(SessionInfo).FileExplorer.Move(json.Params.Path, json.Params.NewPath)
+		err := sessionInfo.FileExplorer.Move(json.Params.Path, json.Params.NewPath)
 		if err == nil {
 			ApiSuccessResponse(c, "")
 		} else {
 			ApiErrorResponse(c, 400, err)
 		}
 	} else if json.Params.Mode == "copy" { // path, newPath
-		err := c.Data["SessionInfo"].(SessionInfo).FileExplorer.Copy(json.Params.Path, json.Params.NewPath)
+		err := sessionInfo.FileExplorer.Copy(json.Params.Path, json.Params.NewPath)
 		if err == nil {
 			ApiSuccessResponse(c, "")
 		} else {
 			ApiErrorResponse(c, 400, err)
 		}
 	} else if json.Params.Mode == "delete" { // path
-		err := c.Data["SessionInfo"].(SessionInfo).FileExplorer.Delete(json.Params.Path)
+		err := sessionInfo.FileExplorer.Delete(json.Params.Path)
 		if err == nil {
 			ApiSuccessResponse(c, "")
 		} else {
@@ -107,14 +107,14 @@ func apiHandler(c *macaron.Context, json models.GenericReq) {
 	} else if json.Params.Mode == "editfile" { // path
 		c.JSON(200, DEFAULT_API_ERROR_RESPONSE)
 	} else if json.Params.Mode == "addfolder" { // name, path
-		err := c.Data["SessionInfo"].(SessionInfo).FileExplorer.Mkdir(json.Params.Path, json.Params.Name)
+		err := sessionInfo.FileExplorer.Mkdir(json.Params.Path, json.Params.Name)
 		if err == nil {
 			ApiSuccessResponse(c, "")
 		} else {
 			ApiErrorResponse(c, 400, err)
 		}
 	} else if json.Params.Mode == "changepermissions" { // path, perms, permsCode, recursive
-		err := c.Data["SessionInfo"].(SessionInfo).FileExplorer.Chmod(json.Params.Path, json.Params.Perms)
+		err := sessionInfo.FileExplorer.Chmod(json.Params.Path, json.Params.Perms)
 		if err == nil {
 			ApiSuccessResponse(c, "")
 		} else {
@@ -133,28 +133,29 @@ func IsApiPath(url string) bool {
 
 func Contexter() macaron.Handler {
 	return func(c *macaron.Context, cache cache.Cache, session session.Store, f *session.Flash) {
-		IsSigned := false
-		UserInfo := SessionInfo{}
+		isSigned := false
+		sessionInfo := SessionInfo{}
 		uid := session.Get("uid")
 
 		if uid == nil {
-			IsSigned = false
+			isSigned = false
 		} else {
-			userInfo := cache.Get(uid.(string))
-			if userInfo == nil {
-				IsSigned = false
+			sessionInfoObj := cache.Get(uid.(string))
+			if sessionInfoObj == nil {
+				isSigned = false
 			} else {
-				UserInfo = userInfo.(SessionInfo)
-				if UserInfo.User == "" || UserInfo.Password == "" {
-					IsSigned = false
+				sessionInfo = sessionInfoObj.(SessionInfo)
+				if sessionInfo.User == "" || sessionInfo.Password == "" {
+					isSigned = false
 				} else {
-					IsSigned = true
-					c.Data["UserInfo"] = UserInfo
-					if UserInfo.FileExplorer == nil {
-						fe, err := BackendConnect(UserInfo.User, UserInfo.Password)
-						UserInfo.FileExplorer = fe
+					isSigned = true
+					c.Data["User"] = sessionInfo.User
+					c.Map(sessionInfo)
+					if sessionInfo.FileExplorer == nil {
+						fe, err := BackendConnect(sessionInfo.User, sessionInfo.Password)
+						sessionInfo.FileExplorer = fe
 						if err != nil {
-							IsSigned = false
+							isSigned = false
 							if IsApiPath(c.Req.URL.Path) {
 								ApiErrorResponse(c, 500, err)
 							} else {
@@ -166,7 +167,7 @@ func Contexter() macaron.Handler {
 			}
 		}
 
-		if IsSigned == false {
+		if isSigned == false {
 			if strings.HasPrefix(c.Req.URL.Path, "/login") {
 				if c.Req.Method == "POST" {
 					username := c.Query("username")
@@ -176,10 +177,11 @@ func Contexter() macaron.Handler {
 						AuthError(c, f, err)
 					} else {
 						uid := username // TODO: ??
-						UserInfo = SessionInfo{username, password, fe, uid}
-						cache.Put(uid, UserInfo, 100000000000)
+						sessionInfo = SessionInfo{username, password, fe, uid}
+						cache.Put(uid, sessionInfo, 100000000000)
 						session.Set("uid", uid)
-						c.Data["UserInfo"] = UserInfo
+						c.Data["User"] = sessionInfo.User
+						c.Map(sessionInfo)
 						c.Redirect("/")
 					}
 				}
@@ -188,7 +190,7 @@ func Contexter() macaron.Handler {
 			}
 		} else {
 			if strings.HasPrefix(c.Req.URL.Path, "/logout") {
-				UserInfo.FileExplorer.Close()
+				sessionInfo.FileExplorer.Close()
 				session.Delete("uid")
 				cache.Delete(uid.(string))
 				c.SetCookie("MacaronSession", "")
