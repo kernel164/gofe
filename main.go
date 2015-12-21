@@ -42,10 +42,12 @@ func startServer() {
 	m := macaron.New()
 	m.Use(macaron.Logger())
 	m.Use(macaron.Recovery())
-	m.Use(macaron.Static("static", macaron.StaticOptions{
-		Prefix:      "static",
-		SkipLogging: true,
-	}))
+	if len(settings.Server.Statics) > 0 {
+		m.Use(macaron.Statics(macaron.StaticOptions{
+			Prefix:      "static",
+			SkipLogging: false,
+		}, settings.Server.Statics...))
+	}
 	m.Use(cache.Cacher())
 	m.Use(session.Sessioner())
 	m.Use(macaron.Renderer())
@@ -58,7 +60,15 @@ func startServer() {
 	m.Post("/api/download", defaultHandler)
 	m.Post("/api/upload", defaultHandler)
 
-	m.Run()
+	if settings.Server.Scheme == settings.HTTP {
+		bind := strings.Split(settings.Server.Bind, ":")
+		if len(bind) == 1 {
+			m.Run(bind[0])
+		}
+		if len(bind) == 2 {
+			m.Run(bind[0], bind[1])
+		}
+	}
 }
 
 func mainHandler(ctx *macaron.Context) {
@@ -201,7 +211,7 @@ func Contexter() macaron.Handler {
 }
 
 func BackendConnect(username string, password string) (fe.FileExplorer, error) {
-	fe := fe.NewSSHFileExplorer(settings.SshHost, username, password)
+	fe := fe.NewSSHFileExplorer(settings.BackendSsh.Host, username, password)
 	err := fe.Init()
 	if err == nil {
 		return fe, nil
