@@ -31,9 +31,9 @@ func main() {
 }
 
 func configRuntime() {
-	nuCPU := runtime.NumCPU()
-	runtime.GOMAXPROCS(nuCPU)
-	fmt.Printf("Running with %d CPUs\n", nuCPU)
+	numCPU := runtime.NumCPU()
+	runtime.GOMAXPROCS(numCPU)
+	fmt.Printf("Running with %d CPUs\n", numCPU)
 }
 
 func startServer() {
@@ -60,7 +60,7 @@ func startServer() {
 	m.Post("/api/download", defaultHandler)
 	m.Post("/api/upload", defaultHandler)
 
-	if settings.Server.Scheme == settings.HTTP {
+	if settings.Server.Type == "http" {
 		bind := strings.Split(settings.Server.Bind, ":")
 		if len(bind) == 1 {
 			m.Run(bind[0])
@@ -211,7 +211,7 @@ func Contexter() macaron.Handler {
 }
 
 func BackendConnect(username string, password string) (fe.FileExplorer, error) {
-	fe := fe.NewSSHFileExplorer(settings.BackendSsh.Host, username, password)
+	fe := fe.NewSSHFileExplorer(settings.Backend.Host, username, password)
 	err := fe.Init()
 	if err == nil {
 		return fe, nil

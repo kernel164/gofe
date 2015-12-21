@@ -117,7 +117,7 @@ func parseLsOutput(lsout string) []models.ListDirEntry {
 		//fmt.Println(idx, line)
 		if len(line) != 0 && !strings.HasPrefix(line, "total") {
 			tokens := strings.Fields(line)
-			if len(tokens) >= 8 && !strings.HasSuffix(tokens[0], "t") {
+			if len(tokens) >= 8 {
 				ftype := "file"
 				if strings.HasPrefix(tokens[0], "d") {
 					ftype = "dir"

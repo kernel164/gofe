@@ -3,28 +3,15 @@ package settings
 import (
 	"gopkg.in/ini.v1"
 	"log"
-	"net/url"
-)
-
-type BackendType string
-type SchemeType string
-
-const (
-	SSH BackendType = "ssh"
-)
-
-const (
-	HTTP SchemeType = "http"
-	UNIX SchemeType = "unix"
 )
 
 var (
-	Backend    BackendType
-	BackendSsh struct {
+	Backend struct {
+		Type string
 		Host string
 	}
 	Server struct {
-		Scheme  SchemeType
+		Type    string
 		Bind    string
 		Statics []string
 	}
@@ -38,26 +25,16 @@ func Load() {
 	}
 
 	// Global Section
-	g := Cfg.Section("")
-	Backend = SSH
-	if g.Key("BACKEND").String() == "ssh" {
-		ssh := Cfg.Section("backend.ssh")
-		BackendSsh.Host = ssh.Key("HOST").MustString("localhost:22")
-	}
+	global := Cfg.Section("")
+	Backend.Type = global.Key("BACKEND").MustString("ssh")
+	Server.Type = global.Key("SERVER").MustString("http")
 
-	// Server section
-	server := Cfg.Section("server")
-	bind := server.Key("BIND").MustString("http://localhost:4000")
-	u, err := url.Parse(bind)
-	if err != nil {
-		panic(err)
-	}
-	if u.Scheme == "http" {
-		Server.Scheme = HTTP
-	}
-	if u.Scheme == "unix" {
-		Server.Scheme = UNIX
-	}
-	Server.Bind = u.Host
+	// Backend Section
+	backend := Cfg.Section("backend." + Backend.Type)
+	Backend.Host = backend.Key("HOST").MustString("localhost:22")
+
+	// Server Section
+	server := Cfg.Section("server." + Server.Type)
+	Server.Bind = server.Key("BIND").MustString("localhost:4000")
 	Server.Statics = server.Key("STATICS").Strings(",")
 }
